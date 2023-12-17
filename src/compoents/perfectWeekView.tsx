@@ -2,14 +2,10 @@ import { useCallback, useContext, useState } from "react";
 import { PlayerPick, TeamPick } from "../stucts/UserPlayerPicks";
 import { PlayerType } from "../stucts/FPLData";
 import { FPLPicks } from "../stucts/FPLPicks";
-import { SubmitHandler, useForm } from "react-hook-form";
 import { LoaderContext } from "./loader";
 import { baseUrl } from "..";
 import UserPerfectWeekOverview from "./userPerfectWeekOverView";
-
-type Inputs = {
-    teamId: string
-}
+import TeamPicker from "./teamPicker";
 
 const PerfectWeekView = () => {
     const baseData = useContext(LoaderContext).baseData;
@@ -21,8 +17,6 @@ const PerfectWeekView = () => {
 
     const [totalPointsMissed, setTotalPointsMissed] = useState<number>(0);
 
-    const { register, handleSubmit } = useForm<Inputs>()
-
     const loadDataPerGameWeek = useCallback(async (teamId: string, week: number) => {
         console.log("load live data for all game weeks");
         let weeklyUserPicks = new Map<number, FPLPicks>();
@@ -31,7 +25,7 @@ const PerfectWeekView = () => {
             await fetch(`${baseUrl}/api/entry/${teamId}/event/${weekInterator}/picks/`)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error("Error getting base data");
+                        throw new Error(`Error loading user data for the week: ${weekInterator}`);
                     }
                     return response.json()
                 })
@@ -187,17 +181,14 @@ const PerfectWeekView = () => {
         }
     }, [baseData, currentWeek, weeklyLivePlayerData, perfectTeams, totalPointsMissed, calcPerfectPicks]);
 
-
-    const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    async function onTeamIdSubmit(data: { teamId: string }) {
         buildUserWeeklyTeams(await loadDataPerGameWeek(data.teamId, currentWeek));
     }
 
     return (
         <div>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <input {...register("teamId", { required: true })}></input>
-                <input type="submit" />
-            </form>
+
+            <TeamPicker submitHandler={onTeamIdSubmit} />
 
             Total points lost: {totalPointsMissed}
 
