@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import Loader from './compoents/loader';
+import Loader from './context/loader';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

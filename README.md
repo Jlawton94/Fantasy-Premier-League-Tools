@@ -1,3 +1,6 @@
+# Fantasy Perfect Choice
+Shows how many points a selected team would have if the manager always picked the best starting XI and Captin
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
