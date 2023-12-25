@@ -12,8 +12,8 @@ const UserPerfectWeekOverview = ({ userTeam, perfectTeam }: props) => {
     const [showDetails, setShowDetails] = useState<boolean>(false);
 
     return (
-        <>
-            <table className="#week-overview-table">
+        <div className="table-continer">
+            <table className="week-overview-table">
                 <tbody>
                     <tr>
                         <th>
@@ -49,7 +49,7 @@ const UserPerfectWeekOverview = ({ userTeam, perfectTeam }: props) => {
             {showDetails && (
                 <UserPerfectWeekDeatils userTeam={userTeam} perfectTeam={perfectTeam} />
             )}
-        </>
+        </div>
 
     );
 };

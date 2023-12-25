@@ -1,4 +1,4 @@
-week-overview-table {
+.week-overview-table {
     width: 100%;
     border-style: groove;
 }
@@ -8,6 +8,6 @@ tr {
     border-spacing: 1px;
 }
 
-table-container {
+.table-container {
     padding: 10px;
 }

@@ -14,8 +14,8 @@ function Loader() {
     const [weeklyLivePlayerData, setWeeklyLivePlayerData] = useState<Map<number, PlayerData> | undefined>(undefined);
 
     const fetchLiveDataForWeek = useCallback(async (week: number): Promise<PlayerData> => {
-        //return await fetch(`${baseUrl}/api/event/${week}/live/`)
-        return fetch(`data_offline/live_week1.json`)
+        return await fetch(`${baseUrl}/api/event/${week}/live/`)
+            //return fetch(`data_offline/live_week1.json`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error("Error getting base data");
@@ -30,8 +30,8 @@ function Loader() {
     //Intialise the data
     useEffect(() => {
         //fetch base data
-        //fetch(`${baseUrl}/api/bootstrap-static/`)
-        fetch(`data_offline/base.json`)
+        fetch(`${baseUrl}/api/bootstrap-static/`)
+            //fetch(`data_offline/base.json`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error("Error getting base data");

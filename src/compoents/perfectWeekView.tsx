@@ -22,8 +22,8 @@ const PerfectWeekView = () => {
         let weeklyUserPicks = new Map<number, FPLPicks>();
 
         for (let weekInterator = 1; weekInterator <= week; weekInterator++) {
-            // await fetch(`${baseUrl}/api/entry/${teamId}/event/${weekInterator}/picks/`)
-            await fetch(`data_offline/picks_week1.json`)
+            await fetch(`${baseUrl}/api/entry/${teamId}/event/${weekInterator}/picks/`)
+                //await fetch(`data_offline/picks_week1.json`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`Error loading user data for the week: ${weekInterator}`);
@@ -197,17 +197,22 @@ const PerfectWeekView = () => {
 
             <TeamPicker submitHandler={onTeamIdSubmit} />
 
-            Total points lost: {totalPointsMissedByWeek.get(currentWeek)}
-            {/*  //add the total points of all picked teams together */}
-            <br />
-            Your total point: { }
-            {/* //add the total points of all the perfect team together */}
-            <br />
-            Perfect manager total points : { }
+            {totalPointsMissedByWeek.size > 0 &&
+                <>
+                    Total points lost: {totalPointsMissedByWeek.get(currentWeek)}
+                    {/*  //add the total points of all picked teams together */}
+                    <br />
+                    Your total point: { }
+                    {/* //add the total points of all the perfect team together */}
+                    <br />
+                    Perfect manager total points : { }
+                </>
+            }
+
 
             {pickedTeams.map(function (team, i) {
                 return (
-                    <div className="table-container" key={`week${i}`}>
+                    <div key={`week${i}`}>
                         <UserPerfectWeekOverview userTeam={team} perfectTeam={perfectTeams[i]} />
                     </div>
                 )
