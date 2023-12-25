@@ -1,0 +1,13 @@
+.week-overview-table {
+    width: 100%;
+    border-style: groove;
+}
+
+tr {
+    border-style: groove;
+    border-spacing: 1px;
+}
+
+.table-container {
+    padding: 10px;
+}

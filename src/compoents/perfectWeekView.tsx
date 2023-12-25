@@ -2,7 +2,7 @@ import { useCallback, useContext, useState } from "react";
 import { PlayerPick, TeamPick } from "../stucts/UserPlayerPicks";
 import { PlayerType } from "../stucts/FPLData";
 import { FPLPicks } from "../stucts/FPLPicks";
-import { LoaderContext } from "./loader";
+import { LoaderContext } from "../context/loader";
 import { baseUrl } from "..";
 import UserPerfectWeekOverview from "./userPerfectWeekOverView";
 import TeamPicker from "./teamPicker";
@@ -15,7 +15,7 @@ const PerfectWeekView = () => {
     const [pickedTeams, setPickedTeams] = useState<TeamPick[]>([]);
     const [perfectTeams, setPerfectTeams] = useState<TeamPick[]>([]);
 
-    const [totalPointsMissed, setTotalPointsMissed] = useState<number>(0);
+    const [totalPointsMissedByWeek, setTotalPointsMissedByWeek] = useState<Map<number, number>>(new Map());
 
     const loadDataPerGameWeek = useCallback(async (teamId: string, week: number) => {
         console.log("load live data for all game weeks");
@@ -23,6 +23,7 @@ const PerfectWeekView = () => {
 
         for (let weekInterator = 1; weekInterator <= week; weekInterator++) {
             await fetch(`${baseUrl}/api/entry/${teamId}/event/${weekInterator}/picks/`)
+                //await fetch(`data_offline/picks_week1.json`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`Error loading user data for the week: ${weekInterator}`);
@@ -36,8 +37,7 @@ const PerfectWeekView = () => {
         return weeklyUserPicks;
     }, [])
 
-    const calcPerfectPicks = useCallback((playerPicks: TeamPick, typesBaseData: PlayerType[], squadSize: number, week: number) => {
-        let perfectPicks: TeamPick[] = perfectTeams;
+    const calcPerfectPicks = useCallback((playerPicks: TeamPick, typesBaseData: PlayerType[], squadSize: number, week: number): TeamPick => {
         let perfectPlayers: PlayerPick[] = [];
 
         //pick the best captin
@@ -90,27 +90,27 @@ const PerfectWeekView = () => {
         perfectPlayers.forEach((player) => {
             totalPoints += player.points * player.pickData.multiplier;
         })
-        setTotalPointsMissed(totalPointsMissed + (playerPicks.totalPoints - totalPoints))
 
         const perfectTeam: TeamPick = {
             week: week,
             totalPoints: totalPoints,
             players: perfectPlayers
         }
-        perfectPicks.push(perfectTeam);
-
-        setPerfectTeams(perfectPicks);
-    }, [perfectTeams, setPerfectTeams]);
+        return perfectTeam;
+    }, []);
 
     const buildUserWeeklyTeams = useCallback((userWeeklyTeamPicks: Map<number, FPLPicks>) => {
         console.log("load user team data for each week");
 
         if (userWeeklyTeamPicks && baseData && weeklyLivePlayerData) {
             let userPickedTeam: TeamPick[] = [];
+            let perfectTeam: TeamPick[] = [];
+            let pointsLostCounterByWeek = new Map<number, number>();
+            let pointsLostCounter = 0
 
             let loadedPlayers = new Map<number, PlayerPick>();
 
-            for (let currentWeekInterator = 1; currentWeekInterator < currentWeek; currentWeekInterator++) {
+            for (let currentWeekInterator = 1; currentWeekInterator <= currentWeek; currentWeekInterator++) {
                 const userTeamForWeek = userWeeklyTeamPicks.get(currentWeekInterator);
                 const weekPlayerData = weeklyLivePlayerData.get(currentWeekInterator);
                 const playerPicksInWeek: PlayerPick[] = []
@@ -173,15 +173,22 @@ const PerfectWeekView = () => {
                     }
                     userPickedTeam.push(pick)
 
-                    calcPerfectPicks(pick, baseData.element_types, baseData.game_settings.squad_squadplay, currentWeekInterator);
+                    const perfectPick = calcPerfectPicks(pick, baseData.element_types, baseData.game_settings.squad_squadplay, currentWeekInterator);
+                    perfectTeam.push(perfectPick);
+                    pointsLostCounter -= pick.totalPoints - perfectPick.totalPoints;
+                    pointsLostCounterByWeek.set(currentWeekInterator, pointsLostCounter);
                 }
             }
 
             setPickedTeams(userPickedTeam);
+            setTotalPointsMissedByWeek(pointsLostCounterByWeek);
+            setPerfectTeams(perfectTeam);
+
         }
-    }, [baseData, currentWeek, weeklyLivePlayerData, perfectTeams, totalPointsMissed, calcPerfectPicks]);
+    }, [baseData, currentWeek, weeklyLivePlayerData, calcPerfectPicks]);
 
     async function onTeamIdSubmit(data: { teamId: string }) {
+        //this can be parrael, load a team, build the perfect team for that week save
         buildUserWeeklyTeams(await loadDataPerGameWeek(data.teamId, currentWeek));
     }
 
@@ -190,7 +197,18 @@ const PerfectWeekView = () => {
 
             <TeamPicker submitHandler={onTeamIdSubmit} />
 
-            Total points lost: {totalPointsMissed}
+            {totalPointsMissedByWeek.size > 0 &&
+                <>
+                    Total points lost: {totalPointsMissedByWeek.get(currentWeek)}
+                    {/*  //add the total points of all picked teams together */}
+                    <br />
+                    Your total point: { }
+                    {/* //add the total points of all the perfect team together */}
+                    <br />
+                    Perfect manager total points : { }
+                </>
+            }
+
 
             {pickedTeams.map(function (team, i) {
                 return (

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TeamPick } from "../stucts/UserPlayerPicks";
 import UserPerfectWeekDeatils from "./userPerfectWeekDetails";
+import '../styling/table.css'
 
 interface props {
     userTeam: TeamPick,
@@ -11,8 +12,8 @@ const UserPerfectWeekOverview = ({ userTeam, perfectTeam }: props) => {
     const [showDetails, setShowDetails] = useState<boolean>(false);
 
     return (
-        <>
-            <table>
+        <div className="table-continer">
+            <table className="week-overview-table">
                 <tbody>
                     <tr>
                         <th>
@@ -48,7 +49,7 @@ const UserPerfectWeekOverview = ({ userTeam, perfectTeam }: props) => {
             {showDetails && (
                 <UserPerfectWeekDeatils userTeam={userTeam} perfectTeam={perfectTeam} />
             )}
-        </>
+        </div>
 
     );
 };
