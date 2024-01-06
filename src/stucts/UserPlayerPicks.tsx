@@ -11,5 +11,6 @@ export interface PlayerPick {
 export interface TeamPick {
     week: number,
     totalPoints: number,
-    players: PlayerPick[]
+    players: PlayerPick[],
+    transferCost: number
 }
