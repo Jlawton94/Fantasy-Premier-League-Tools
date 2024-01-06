@@ -1,5 +1,6 @@
 import { TeamPick } from "../stucts/UserPlayerPicks";
 import Team from "./team";
+import '../styling/table.css'
 
 interface props {
     userTeam: TeamPick,
@@ -20,7 +21,7 @@ const UserPerfectWeekDeatils = ({ userTeam, perfectTeam }: props) => {
                 </tr>
                 <tr key={`Point_Diff:${userTeam.week}`}>
                     <td>
-                        Point Diff: {perfectTeam.totalPoints - perfectTeam.totalPoints}
+                        Point Diff: {perfectTeam.totalPoints - userTeam.totalPoints}
                     </td>
                 </tr>
             </tbody>

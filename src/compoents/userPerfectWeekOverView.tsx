@@ -5,14 +5,14 @@ import '../styling/table.css'
 
 interface props {
     userTeam: TeamPick,
-    perfectTeam: TeamPick,
+    perfectTeam: TeamPick
 }
 
 const UserPerfectWeekOverview = ({ userTeam, perfectTeam }: props) => {
     const [showDetails, setShowDetails] = useState<boolean>(false);
 
     return (
-        <div className="table-continer">
+        <div className="table-container">
             <table className="week-overview-table">
                 <tbody>
                     <tr>
@@ -28,6 +28,9 @@ const UserPerfectWeekOverview = ({ userTeam, perfectTeam }: props) => {
                         <th>
                             Points Lost
                         </th>
+                        <th>
+                            Transfer Point Spend
+                        </th>
                     </tr>
                     <tr>
                         <td>
@@ -41,6 +44,9 @@ const UserPerfectWeekOverview = ({ userTeam, perfectTeam }: props) => {
                         </td>
                         <td>
                             {perfectTeam.totalPoints - userTeam.totalPoints}
+                        </td>
+                        <td>
+                            {userTeam.transferCost}
                         </td>
                     </tr>
                 </tbody>

@@ -1,20 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { PlayerData } from "../stucts/PlayerData";
 import { FPLData } from "../stucts/FPLData";
 import React from "react";
-import PerfectWeekView from "../compoents/perfectWeekView";
 import { baseUrl } from "..";
 
-export const LoaderContext = React.createContext<{ baseData: FPLData | undefined, currentWeek: number, weeklyLivePlayerData: Map<number, PlayerData> | undefined }>({ baseData: undefined, currentWeek: 0, weeklyLivePlayerData: undefined });
+const LoaderContext = React.createContext<{ baseData: FPLData | undefined, currentWeek: number, weeklyLivePlayerData: Map<number, PlayerData> | undefined }>({ baseData: undefined, currentWeek: 0, weeklyLivePlayerData: undefined });
 
-function Loader() {
+const Loader = (props: any) => {
 
     const [baseData, setBaseData] = useState<FPLData | undefined>(undefined);
     const [currentWeek, setCurrentWeek] = useState<number>(0);
-    const [weeklyLivePlayerData, setWeeklyLivePlayerData] = useState<Map<number, PlayerData> | undefined>(undefined);
+    const [weeklyLivePlayerData, setWeeklyLivePlayerData] = useState<Map<number, PlayerData>>(new Map());
 
     const fetchLiveDataForWeek = useCallback(async (week: number): Promise<PlayerData> => {
-        return await fetch(`${baseUrl}/api/event/${week}/live/`)
+        return fetch(`${baseUrl}/api/event/${week}/live/`)
             //return fetch(`data_offline/live_week1.json`)
             .then(response => {
                 if (!response.ok) {
@@ -45,22 +44,21 @@ function Loader() {
                 setCurrentWeek(weekNumber);
 
                 //fetch live data for each week
-                let weeklyDataTemp = new Map<number, PlayerData>();
                 for (let weekIndex = 1; weekIndex <= weekNumber; weekIndex++) {
                     fetchLiveDataForWeek(weekIndex).then((playerData: PlayerData) => {
-                        weeklyDataTemp.set(weekIndex, playerData);
+                        setWeeklyLivePlayerData(weeklyLivePlayerData.set(weekIndex, playerData));
                     })
-                    // weeklyDataTemp.set(weekIndex, await fetchLiveDataForWeek(weekIndex))
                 }
-                setWeeklyLivePlayerData(weeklyDataTemp);
             })
-    }, [fetchLiveDataForWeek])
+    }, [fetchLiveDataForWeek, weeklyLivePlayerData])
 
     return (
         <LoaderContext.Provider value={{ baseData, currentWeek, weeklyLivePlayerData }}>
-            <PerfectWeekView />
+            {props.children}
         </LoaderContext.Provider>
     )
 }
 
 export default Loader;
+
+export const useLoaderContext = () => useContext(LoaderContext);

@@ -1,6 +1,7 @@
 .week-overview-table {
     width: 100%;
     border-style: groove;
+    table-layout: fixed;
 }
 
 tr {
@@ -8,6 +9,10 @@ tr {
     border-spacing: 1px;
 }
 
+td {
+    text-align: center;
+}
+
 .table-container {
-    padding: 10px;
+    margin: 10px;
 }

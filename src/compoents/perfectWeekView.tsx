@@ -1,41 +1,21 @@
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useState } from "react";
 import { PlayerPick, TeamPick } from "../stucts/UserPlayerPicks";
 import { PlayerType } from "../stucts/FPLData";
 import { FPLPicks } from "../stucts/FPLPicks";
-import { LoaderContext } from "../context/loader";
+import { useLoaderContext } from "../context/loader";
 import { baseUrl } from "..";
 import UserPerfectWeekOverview from "./userPerfectWeekOverView";
 import TeamPicker from "./teamPicker";
 
 const PerfectWeekView = () => {
-    const baseData = useContext(LoaderContext).baseData;
-    const currentWeek = useContext(LoaderContext).currentWeek;
-    const weeklyLivePlayerData = useContext(LoaderContext).weeklyLivePlayerData;
+    const baseData = useLoaderContext().baseData;
+    const currentWeek = useLoaderContext().currentWeek;
+    const weeklyLivePlayerData = useLoaderContext().weeklyLivePlayerData;
 
-    const [pickedTeams, setPickedTeams] = useState<TeamPick[]>([]);
-    const [perfectTeams, setPerfectTeams] = useState<TeamPick[]>([]);
+    const [pickedTeams, setPickedTeams] = useState<Map<number, TeamPick>>(new Map());
+    const [perfectTeams, setPerfectTeams] = useState<Map<number, TeamPick>>(new Map());
 
-    const [totalPointsMissedByWeek, setTotalPointsMissedByWeek] = useState<Map<number, number>>(new Map());
-
-    const loadDataPerGameWeek = useCallback(async (teamId: string, week: number) => {
-        console.log("load live data for all game weeks");
-        let weeklyUserPicks = new Map<number, FPLPicks>();
-
-        for (let weekInterator = 1; weekInterator <= week; weekInterator++) {
-            await fetch(`${baseUrl}/api/entry/${teamId}/event/${weekInterator}/picks/`)
-                //await fetch(`data_offline/picks_week1.json`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Error loading user data for the week: ${weekInterator}`);
-                    }
-                    return response.json()
-                })
-                .then((response: FPLPicks) => {
-                    weeklyUserPicks.set(weekInterator, response);
-                })
-        }
-        return weeklyUserPicks;
-    }, [])
+    const [loaded, setLoaded] = useState<boolean>(false);
 
     const calcPerfectPicks = useCallback((playerPicks: TeamPick, typesBaseData: PlayerType[], squadSize: number, week: number): TeamPick => {
         let perfectPlayers: PlayerPick[] = [];
@@ -94,102 +74,155 @@ const PerfectWeekView = () => {
         const perfectTeam: TeamPick = {
             week: week,
             totalPoints: totalPoints,
-            players: perfectPlayers
+            players: perfectPlayers,
+            transferCost: playerPicks.transferCost
         }
         return perfectTeam;
     }, []);
 
-    const buildUserWeeklyTeams = useCallback((userWeeklyTeamPicks: Map<number, FPLPicks>) => {
-        console.log("load user team data for each week");
-
-        if (userWeeklyTeamPicks && baseData && weeklyLivePlayerData) {
-            let userPickedTeam: TeamPick[] = [];
-            let perfectTeam: TeamPick[] = [];
-            let pointsLostCounterByWeek = new Map<number, number>();
-            let pointsLostCounter = 0
+    const buildUserTeamPerWeek = useCallback((userWeeklyTeamPick: FPLPicks, week: number) => {
+        if (userWeeklyTeamPick && baseData && weeklyLivePlayerData) {
+            let userPickedTeam: TeamPick;
+            let perfectTeam: TeamPick;
 
             let loadedPlayers = new Map<number, PlayerPick>();
 
-            for (let currentWeekInterator = 1; currentWeekInterator <= currentWeek; currentWeekInterator++) {
-                const userTeamForWeek = userWeeklyTeamPicks.get(currentWeekInterator);
-                const weekPlayerData = weeklyLivePlayerData.get(currentWeekInterator);
-                const playerPicksInWeek: PlayerPick[] = []
+            const weekPlayerData = weeklyLivePlayerData.get(week);
+            const playerPicksInWeek: PlayerPick[] = []
 
-                if (userTeamForWeek) {
-                    userTeamForWeek.picks.forEach((pickedPlayer => {
-                        const playerId = pickedPlayer.element;
-                        const emptyPlayerType = {
-                            id: 0,
-                            plural_name: "",
-                            plural_name_short: "",
-                            singular_name: "",
-                            singular_name_short: "",
-                            squad_select: 0,
-                            squad_min_play: 0,
-                            squad_max_play: 0,
-                            ui_shirt_specific: false,
-                            sub_positions_locked: [],
-                            element_count: 0
-                        }
-
-                        let player: PlayerPick | undefined = {
-                            name: "",
-                            points: 0,
-                            player_type: emptyPlayerType,
-                            pickData: {
-                                element: 0,
-                                position: 0,
-                                multiplier: 0,
-                                is_captain: false,
-                                is_vice_captain: false
-                            }
-                        }
-
-                        if (loadedPlayers.get(playerId)) {
-                            player = loadedPlayers.get(playerId);
-                        } else {
-                            const playerBaseData = baseData.elements.find((player) => playerId === player.id);
-                            const playerType = baseData.element_types.find((types) => playerBaseData?.element_type === types.id)
-
-                            player.name = playerBaseData?.web_name ? playerBaseData.web_name : "";
-                            player.player_type = playerType ? playerType : emptyPlayerType;
-
-                            loadedPlayers.set(playerId, structuredClone(player));
-                        }
-
-                        if (player) {
-                            const playerData = weekPlayerData?.elements.find((data) => data.id === playerId);
-                            const points = playerData?.stats.total_points;
-                            player.points = points ? points : 0;
-                            player.pickData = pickedPlayer;
-                            playerPicksInWeek.push(structuredClone(player));
-                        }
-
-                    }))
-                    const pick = {
-                        week: currentWeekInterator,
-                        players: playerPicksInWeek,
-                        totalPoints: userTeamForWeek.entry_history.points
+            if (userWeeklyTeamPick) {
+                userWeeklyTeamPick.picks.forEach((pickedPlayer => {
+                    const playerId = pickedPlayer.element;
+                    const emptyPlayerType = {
+                        id: 0,
+                        plural_name: "",
+                        plural_name_short: "",
+                        singular_name: "",
+                        singular_name_short: "",
+                        squad_select: 0,
+                        squad_min_play: 0,
+                        squad_max_play: 0,
+                        ui_shirt_specific: false,
+                        sub_positions_locked: [],
+                        element_count: 0
                     }
-                    userPickedTeam.push(pick)
 
-                    const perfectPick = calcPerfectPicks(pick, baseData.element_types, baseData.game_settings.squad_squadplay, currentWeekInterator);
-                    perfectTeam.push(perfectPick);
-                    pointsLostCounter -= pick.totalPoints - perfectPick.totalPoints;
-                    pointsLostCounterByWeek.set(currentWeekInterator, pointsLostCounter);
+                    let player: PlayerPick | undefined = {
+                        name: "",
+                        points: 0,
+                        player_type: emptyPlayerType,
+                        pickData: {
+                            element: 0,
+                            position: 0,
+                            multiplier: 0,
+                            is_captain: false,
+                            is_vice_captain: false
+                        }
+                    }
+
+                    if (loadedPlayers.get(playerId)) {
+                        player = loadedPlayers.get(playerId);
+                    } else {
+                        const playerBaseData = baseData.elements.find((player) => playerId === player.id);
+                        const playerType = baseData.element_types.find((types) => playerBaseData?.element_type === types.id)
+
+                        player.name = playerBaseData?.web_name ? playerBaseData.web_name : "";
+                        player.player_type = playerType ? playerType : emptyPlayerType;
+
+                        loadedPlayers.set(playerId, structuredClone(player));
+                    }
+
+                    if (player) {
+                        const playerData = weekPlayerData?.elements.find((data) => data.id === playerId);
+                        const points = playerData?.stats.total_points;
+                        player.points = points ? points : 0;
+                        player.pickData = pickedPlayer;
+                        playerPicksInWeek.push(structuredClone(player));
+                    }
+
+                }))
+                const pick = {
+                    week: week,
+                    players: playerPicksInWeek,
+                    totalPoints: userWeeklyTeamPick.entry_history.points,
+                    transferCost: userWeeklyTeamPick.entry_history.event_transfers_cost
+                }
+                userPickedTeam = pick;
+
+                const perfectPick = calcPerfectPicks(pick, baseData.element_types, baseData.game_settings.squad_squadplay, week);
+                perfectTeam = perfectPick;
+
+                setPerfectTeams(perfectTeams.set(week, perfectTeam));
+                setPickedTeams(pickedTeams.set(week, userPickedTeam));
+
+                if (perfectTeams.size === currentWeek && pickedTeams.size === currentWeek) {
+                    setLoaded(true);
                 }
             }
-
-            setPickedTeams(userPickedTeam);
-            setTotalPointsMissedByWeek(pointsLostCounterByWeek);
-            setPerfectTeams(perfectTeam);
-
         }
-    }, [baseData, currentWeek, weeklyLivePlayerData, calcPerfectPicks]);
+    }, [baseData, weeklyLivePlayerData, calcPerfectPicks, perfectTeams, pickedTeams, currentWeek]);
+
+    const loadDataPerGameWeek = useCallback(async (teamId: string, week: number) => {
+        for (let weekInterator = 1; weekInterator <= week; weekInterator++) {
+            fetch(`${baseUrl}/api/entry/${teamId}/event/${weekInterator}/picks/`)
+                //await fetch(`data_offline/picks_week1.json`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error loading user data for the week: ${weekInterator}`);
+                    }
+                    return response.json()
+                })
+                .then((userPicks: FPLPicks) => {
+                    buildUserTeamPerWeek(userPicks, weekInterator);
+
+                })
+        }
+    }, [buildUserTeamPerWeek])
 
     async function onTeamIdSubmit(data: { teamId: string }) {
         //this can be parrael, load a team, build the perfect team for that week save
-        buildUserWeeklyTeams(await loadDataPerGameWeek(data.teamId, currentWeek));
+        loadDataPerGameWeek(data.teamId, currentWeek)
+    }
+
+    function getPerfectWeekOverviewMap(teamPicks: Map<number, TeamPick>) {
+        let perfectWeekOverviews: JSX.Element[] = [];
+        for (let i = 1; i <= currentWeek; i++) {
+            const weekUserPick = teamPicks.get(i);
+            const weekPerfectPick = perfectTeams.get(i);
+
+            if (weekUserPick && weekPerfectPick) {
+                perfectWeekOverviews.push(
+                    <div key={`week${i}`}>
+                        <UserPerfectWeekOverview userTeam={weekUserPick} perfectTeam={weekPerfectPick} />
+                    </div>
+                );
+            }
+        }
+        return perfectWeekOverviews;
+    }
+
+    function getTotalPointsMissedByWeek(teamPicks: Map<number, TeamPick>, perfectTeamPicks: Map<number, TeamPick>): number {
+        let totalPoints = 0;
+        for (let i = 1; i <= currentWeek; i++) {
+            const weekUserPick = teamPicks.get(i);
+            const weekPerfectPick = perfectTeamPicks.get(i);
+
+            if (weekUserPick && weekPerfectPick) {
+                totalPoints += weekPerfectPick.totalPoints - weekUserPick.totalPoints;
+            }
+        }
+        return totalPoints;
+    }
+
+    function getTotalPoints(teamPicks: Map<number, TeamPick>): number {
+        let totalPoints = 0;
+        for (let i = 1; i <= currentWeek; i++) {
+            const weekPick = teamPicks.get(i);
+            if (weekPick) {
+                totalPoints += weekPick.totalPoints - weekPick.transferCost;
+            }
+        }
+        return totalPoints;
     }
 
     return (
@@ -197,27 +230,19 @@ const PerfectWeekView = () => {
 
             <TeamPicker submitHandler={onTeamIdSubmit} />
 
-            {totalPointsMissedByWeek.size > 0 &&
+            {loaded && (
                 <>
-                    Total points lost: {totalPointsMissedByWeek.get(currentWeek)}
+                    Total points lost: {getTotalPointsMissedByWeek(pickedTeams, perfectTeams)}
                     {/*  //add the total points of all picked teams together */}
                     <br />
-                    Your total point: { }
+                    Your total point: {getTotalPoints(pickedTeams)}
                     {/* //add the total points of all the perfect team together */}
                     <br />
-                    Perfect manager total points : { }
+                    Perfect manager total points : {getTotalPoints(perfectTeams)}
+
+                    {getPerfectWeekOverviewMap(pickedTeams)}
                 </>
-            }
-
-
-            {pickedTeams.map(function (team, i) {
-                return (
-                    <div key={`week${i}`}>
-                        <UserPerfectWeekOverview userTeam={team} perfectTeam={perfectTeams[i]} />
-                    </div>
-                )
-            })}
-
+            )}
         </div>
     );
 };
