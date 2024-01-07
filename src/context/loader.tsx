@@ -4,9 +4,9 @@ import { FPLData } from "../stucts/FPLData";
 import React from "react";
 import { baseUrl } from "..";
 
-const LoaderContext = React.createContext<{ baseData: FPLData | undefined, currentWeek: number, weeklyLivePlayerData: Map<number, PlayerData> | undefined }>({ baseData: undefined, currentWeek: 0, weeklyLivePlayerData: undefined });
+const BaseDataContext = React.createContext<{ baseData: FPLData | undefined, currentWeek: number, weeklyLivePlayerData: Map<number, PlayerData> | undefined }>({ baseData: undefined, currentWeek: 0, weeklyLivePlayerData: undefined });
 
-const Loader = (props: any) => {
+const BaseData = (props: any) => {
 
     const [baseData, setBaseData] = useState<FPLData | undefined>(undefined);
     const [currentWeek, setCurrentWeek] = useState<number>(0);
@@ -53,12 +53,12 @@ const Loader = (props: any) => {
     }, [fetchLiveDataForWeek, weeklyLivePlayerData])
 
     return (
-        <LoaderContext.Provider value={{ baseData, currentWeek, weeklyLivePlayerData }}>
+        <BaseDataContext.Provider value={{ baseData, currentWeek, weeklyLivePlayerData }}>
             {props.children}
-        </LoaderContext.Provider>
+        </BaseDataContext.Provider>
     )
 }
 
-export default Loader;
+export default BaseData;
 
-export const useLoaderContext = () => useContext(LoaderContext);
+export const useLoaderContext = () => useContext(BaseDataContext);
