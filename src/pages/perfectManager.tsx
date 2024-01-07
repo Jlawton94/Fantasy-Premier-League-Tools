@@ -14,6 +14,7 @@ const PerfectManager = () => {
 
     const [pickedTeams, setPickedTeams] = useState<Map<number, TeamPick>>(new Map());
     const [perfectTeams, setPerfectTeams] = useState<Map<number, TeamPick>>(new Map());
+    const [teamName, setTeamName] = useState<string>("");
 
     const [loaded, setLoaded] = useState<boolean>(false);
 
@@ -179,9 +180,22 @@ const PerfectManager = () => {
         }
     }, [buildUserTeamPerWeek])
 
+    const loadTeamData = useCallback(async (teamId: string) => {
+        fetch(`${baseUrl}/api/entry/${teamId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error loading user team data`);
+                }
+                return response.json()
+            })
+            .then((teamData) => {
+                setTeamName(teamData.name);
+            })
+    }, []);
+
     async function onTeamIdSubmit(data: { teamId: string }) {
-        //this can be parrael, load a team, build the perfect team for that week save
-        loadDataPerGameWeek(data.teamId, currentWeek)
+        loadDataPerGameWeek(data.teamId, currentWeek);
+        loadTeamData(data.teamId);
     }
 
     function getPerfectWeekOverviewMap(teamPicks: Map<number, TeamPick>) {
@@ -229,6 +243,8 @@ const PerfectManager = () => {
         <div className="col">
 
             <TeamPicker submitHandler={onTeamIdSubmit} />
+
+            {teamName}
 
             {loaded && (
                 <>
