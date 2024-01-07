@@ -3,17 +3,17 @@ import "../styling/sidebar.css";
 
 const Sidebar = () => {
     return (
-        <nav className="navbar bg-light col-1 vh-100 sticky-top align-items-start">
-            <div className="conatiner-fluid">
+        <nav className="navbar col-2 vh-100 sticky-top align-items-start sidebar">
+            <div className="conatiner-fluid w-100">
                 <ul className="navbar-nav">
-                    <li>
-                        <NavLink to="/" className={({ isActive, isPending }) =>
-                            isPending ? "pendingLink" : isActive ? "activeLink" : ""
+                    <li className="py-1">
+                        <NavLink to="/" className={({ isActive }) =>
+                            isActive ? "activeLink" : "link"
                         }>Home</NavLink>
                     </li>
-                    <li>
-                        <NavLink to="/perfect-manager" className={({ isActive, isPending }) =>
-                            isPending ? "pendingLink" : isActive ? "activeLink" : ""
+                    <li className="py-1">
+                        <NavLink to="/perfect-manager" className={({ isActive }) =>
+                            isActive ? "activeLink" : "link"
                         }>Perfect Manager</NavLink>
                     </li>
                 </ul>

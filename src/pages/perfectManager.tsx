@@ -240,21 +240,23 @@ const PerfectManager = () => {
     }
 
     return (
-        <div className="col">
+        <div className="col p-2">
 
             <TeamPicker submitHandler={onTeamIdSubmit} />
 
-            {teamName}
-
             {loaded && (
                 <>
-                    Total points lost: {getTotalPointsMissedByWeek(pickedTeams, perfectTeams)}
-                    {/*  //add the total points of all picked teams together */}
-                    <br />
-                    Your total point: {getTotalPoints(pickedTeams)}
-                    {/* //add the total points of all the perfect team together */}
-                    <br />
-                    Perfect manager total points : {getTotalPoints(perfectTeams)}
+                    <div>
+                        {teamName}
+                        <br />
+                        Total points lost: {getTotalPointsMissedByWeek(pickedTeams, perfectTeams)}
+                        {/*  //add the total points of all picked teams together */}
+                        <br />
+                        Your total point: {getTotalPoints(pickedTeams)}
+                        {/* //add the total points of all the perfect team together */}
+                        <br />
+                        Perfect manager total points : {getTotalPoints(perfectTeams)}
+                    </div>
 
                     {getPerfectWeekOverviewMap(pickedTeams)}
                 </>
