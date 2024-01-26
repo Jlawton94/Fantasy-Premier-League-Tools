@@ -1,7 +1,7 @@
 .link,
-.activeLink {
+.activeLink,
+.parentLink {
     display: block;
-    color: #37003c;
     border-top-right-radius: 50px;
     border-bottom-right-radius: 50px;
     padding-left: 5%;
@@ -11,15 +11,22 @@
     text-decoration: none;
 }
 
+.parentLink {
+    width: 80%;
+    background-color: purple;
+    color: white;
+}
 
 .link {
-    width: 80%;
+    width: 70%;
     background-color: #00ff87;
+    color: #37003c;
 }
 
 .activeLink {
-    width: 90%;
+    width: 95%;
     background-color: white;
+    color: #37003c;
 }
 
 .link:hover {
