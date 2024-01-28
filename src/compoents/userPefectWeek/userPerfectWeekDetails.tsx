@@ -1,6 +1,6 @@
-import { TeamPick } from "../stucts/UserPlayerPicks";
-import Team from "./team";
-import '../styling/table.css'
+import { TeamPick } from "../../stucts/UserPlayerPicks";
+import Team from "../team";
+import '../../styling/table.css'
 
 interface props {
     userTeam: TeamPick,

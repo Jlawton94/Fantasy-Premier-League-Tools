@@ -3,11 +3,13 @@ import { Routes, Route } from "react-router-dom";
 import Sidebar from './compoents/sidebar';
 import Home from './pages/home';
 import PerfectManager from './pages/perfectManager';
+import Spinner from './compoents/spinner';
 
 const Router = () => {
     return (
         <div className="container-fluid row">
             <Sidebar />
+            <Spinner />
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/perfect-manager" element={<PerfectManager />} />

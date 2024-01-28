@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { TeamPick } from "../stucts/UserPlayerPicks";
+import { TeamPick } from "../../stucts/UserPlayerPicks";
 import UserPerfectWeekDeatils from "./userPerfectWeekDetails";
-import '../styling/table.css'
+import '../../styling/table.css'
 
 interface props {
     userTeam: TeamPick,

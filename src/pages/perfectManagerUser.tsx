@@ -2,16 +2,17 @@ import { useCallback, useEffect, useState } from "react";
 import { PlayerPick, TeamPick } from "../stucts/UserPlayerPicks";
 import { PlayerType } from "../stucts/FPLData";
 import { FPLPicks } from "../stucts/FPLPicks";
-import { useLoaderContext } from "../context/loader";
+import { useBaseDataContext } from "../context/baseDataContext";
 import { baseUrl } from "..";
-import UserPerfectWeekOverview from "../compoents/userPerfectWeekOverView";
+import UserPerfectWeekOverview from "../compoents/userPefectWeek/userPerfectWeekOverView";
 import TeamPicker from "../compoents/teamPicker";
 import { useParams } from "react-router-dom";
+import { useSpinnerContext } from "../context/spinnerContext";
 
 const PerfectManagerUser = () => {
-    const baseData = useLoaderContext().baseData;
-    const currentWeek = useLoaderContext().currentWeek;
-    const weeklyLivePlayerData = useLoaderContext().weeklyLivePlayerData;
+    const baseData = useBaseDataContext().baseData;
+    const currentWeek = useBaseDataContext().currentWeek;
+    const weeklyLivePlayerData = useBaseDataContext().weeklyLivePlayerData;
 
     const { id } = useParams();
     const [pickedTeams, setPickedTeams] = useState<Map<number, TeamPick>>(new Map());
@@ -19,6 +20,10 @@ const PerfectManagerUser = () => {
     const [teamName, setTeamName] = useState<string>("");
 
     const [loaded, setLoaded] = useState<boolean>(false);
+
+    const addLoader = useSpinnerContext().addLoader;
+    const deleteLoader = useSpinnerContext().deleteLoader;
+    const setSpinnerText = useSpinnerContext().setSpinnerText;
 
     const calcPerfectPicks = useCallback((playerPicks: TeamPick, typesBaseData: PlayerType[], squadSize: number, week: number): TeamPick => {
         let perfectPlayers: PlayerPick[] = [];
@@ -166,13 +171,17 @@ const PerfectManagerUser = () => {
     }, [baseData, weeklyLivePlayerData, calcPerfectPicks, perfectTeams, pickedTeams, currentWeek]);
 
     const loadDataPerGameWeek = useCallback(async (teamId: string, week: number) => {
+
         for (let weekInterator = 1; weekInterator <= week; weekInterator++) {
+            addLoader();
             fetch(`${baseUrl}/api/entry/${teamId}/event/${weekInterator}/picks/`)
                 //await fetch(`data_offline/picks_week1.json`)
                 .then(response => {
                     if (!response.ok) {
+                        deleteLoader();
                         throw new Error(`Error loading user data for the week: ${weekInterator}`);
                     }
+                    deleteLoader();
                     return response.json()
                 })
                 .then((userPicks: FPLPicks) => {
@@ -180,29 +189,33 @@ const PerfectManagerUser = () => {
 
                 })
         }
-    }, [buildUserTeamPerWeek])
+    }, [buildUserTeamPerWeek, addLoader, deleteLoader])
 
     const loadTeamData = useCallback(async (teamId: string) => {
+        addLoader();
         fetch(`${baseUrl}/api/entry/${teamId}/`)
             .then(response => {
                 if (!response.ok) {
+                    deleteLoader();
                     throw new Error(`Error loading user team data`);
                 }
+                deleteLoader();
                 return response.json()
             })
             .then((teamData) => {
                 setTeamName(teamData.name);
             })
-    }, []);
+    }, [addLoader, deleteLoader]);
 
     const onTeamIdSubmit = useCallback(async (data: { teamId: string }) => {
         //clear the data
         setLoaded(false);
+        setSpinnerText("Loading User Data...");
 
         loadDataPerGameWeek(data.teamId, currentWeek);
         loadTeamData(data.teamId);
         window.history.replaceState(null, "", `/perfect-manager-user/${data.teamId}`);
-    }, [currentWeek, loadDataPerGameWeek, loadTeamData]);
+    }, [currentWeek, loadDataPerGameWeek, loadTeamData, setSpinnerText]);
 
     useEffect(() => {
         if (id) {
