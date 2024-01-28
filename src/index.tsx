@@ -2,8 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from "react-router-dom";
 import './index.css';
-import BaseData from './context/loader';
+import BaseDataProvider from './context/baseDataContext';
 import Router from './router';
+import SpinnerProvider from './context/spinnerContext';
 
 
 const root = ReactDOM.createRoot(
@@ -15,9 +16,11 @@ export const baseUrl = 'http://localhost:3000';
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <BaseData>
-        <Router />
-      </BaseData>
+      <SpinnerProvider>
+        <BaseDataProvider>
+          <Router />
+        </BaseDataProvider>
+      </SpinnerProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
