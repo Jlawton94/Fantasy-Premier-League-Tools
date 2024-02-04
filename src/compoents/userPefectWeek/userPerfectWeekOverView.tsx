@@ -8,6 +8,16 @@ interface props {
     perfectTeam: TeamPick
 }
 
+function correctCaptin(team1: TeamPick, team2: TeamPick) {
+    var captin1 = team1.players.filter(player => player.pickData.is_captain).at(0);
+    var captin2 = team2.players.filter(player => player.pickData.is_captain).at(0);
+    if (captin1?.pickData.element === captin2?.pickData.element) {
+        return true
+    } else {
+        return false
+    }
+}
+
 const UserPerfectWeekOverview = ({ userTeam, perfectTeam }: props) => {
     const [showDetails, setShowDetails] = useState<boolean>(false);
 
@@ -31,6 +41,9 @@ const UserPerfectWeekOverview = ({ userTeam, perfectTeam }: props) => {
                         <th>
                             Transfer Point Spend
                         </th>
+                        <th>
+                            Correct Captin
+                        </th>
                     </tr>
                     <tr>
                         <td>
@@ -47,6 +60,9 @@ const UserPerfectWeekOverview = ({ userTeam, perfectTeam }: props) => {
                         </td>
                         <td>
                             {userTeam.transferCost}
+                        </td>
+                        <td>
+                            {correctCaptin(perfectTeam, userTeam) ? "Yes" : "No"}
                         </td>
                     </tr>
                 </tbody>
